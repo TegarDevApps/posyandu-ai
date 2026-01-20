@@ -60,7 +60,7 @@ Setelah deploy, tambahkan environment variables di Netlify:
    **Groq API (untuk text chat):**
 
    ```
-   VITE_OPENAI_API_KEY = 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
+   VITE_OPENAI_API_KEY = [Your Groq API Key - Get from https://console.groq.com/keys]
    VITE_OPENAI_API_URL = https://api.groq.com/openai/v1/chat/completions
    VITE_OPENAI_MODEL = llama-3.3-70b-versatile
    ```
@@ -68,7 +68,7 @@ Setelah deploy, tambahkan environment variables di Netlify:
    **Google Gemini API (untuk vision/gambar):**
 
    ```
-   VITE_GEMINI_API_KEY = AIzaSyATAnnM9EZh8sjzqsKupXtXVICmvt24tqE
+   VITE_GEMINI_API_KEY = [Your Gemini API Key - Get from https://aistudio.google.com/app/apikey]
    ```
 
 3. **Klik "Save"**
