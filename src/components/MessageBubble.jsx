@@ -15,12 +15,27 @@ const MessageBubble = ({ message, index }) => {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
+          whileHover={{ 
+            scale: 1.1,
+            rotate: [0, -5, 5, -5, 0],
+            transition: { duration: 0.5 }
+          }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="flex-shrink-0"
+          className="flex-shrink-0 cursor-pointer"
         >
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-base sm:text-xl shadow-lg">
+          <motion.div 
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-base sm:text-xl shadow-lg"
+            animate={{ 
+              boxShadow: [
+                "0 10px 15px -3px rgba(59, 130, 246, 0.3)",
+                "0 10px 15px -3px rgba(59, 130, 246, 0.5)",
+                "0 10px 15px -3px rgba(59, 130, 246, 0.3)"
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
             🏥
-          </div>
+          </motion.div>
         </motion.div>
       )}
 
@@ -32,24 +47,40 @@ const MessageBubble = ({ message, index }) => {
             : 'bg-white text-gray-800 rounded-bl-sm'
         }`}
       >
-        {/* Display images if present */}
-        {message.images && message.images.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-2">
-            {message.images.map((img, idx) => (
-              <img
-                key={idx}
-                src={img.preview}
-                alt={img.name}
-                className="max-w-full sm:max-w-xs rounded-lg border-2 border-white/20"
-              />
-            ))}
-          </div>
-        )}
-        
         {isUser ? (
-          <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base">{message.content}</p>
+          <>
+            {/* Display images for user messages */}
+            {message.images && message.images.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {message.images.map((img, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3, delay: idx * 0.1 }}
+                    className="relative group"
+                  >
+                    <img
+                      src={img.preview}
+                      alt={img.name}
+                      className="max-w-full sm:max-w-xs rounded-lg border-2 border-white/20 group-hover:border-white/40 transition-all"
+                    />
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 1 }}
+                      className="absolute inset-0 bg-black/10 rounded-lg flex items-center justify-center"
+                    >
+                      <span className="text-3xl">📸</span>
+                    </motion.div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+            <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base">{message.content}</p>
+          </>
         ) : (
-          <FormattedMessage content={message.content} />
+          <FormattedMessage content={message.content} images={message.images || []} />
         )}
         <motion.div
           initial={{ opacity: 0 }}
@@ -65,8 +96,13 @@ const MessageBubble = ({ message, index }) => {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
+          whileHover={{ 
+            scale: 1.1,
+            rotate: [0, 5, -5, 5, 0],
+            transition: { duration: 0.5 }
+          }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="flex-shrink-0"
+          className="flex-shrink-0 cursor-pointer"
         >
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-base sm:text-xl shadow-lg">
             👤

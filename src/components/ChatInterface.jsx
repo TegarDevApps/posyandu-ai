@@ -119,6 +119,38 @@ PENTING - FORMAT JAWABAN:
 - Gunakan bullet points (•) atau numbering untuk list
 - Pisahkan paragraf dengan jelas
 - Gunakan heading (##) untuk topik utama
+- JANGAN sertakan link gambar eksternal atau URL gambar dalam response
+- JANGAN gunakan markdown image syntax ![](url)
+
+SANGAT PENTING - PENEMPATAN GAMBAR:
+- Untuk menampilkan gambar yang diupload user, gunakan marker: [IMAGE:0] untuk gambar pertama, [IMAGE:1] untuk gambar kedua, dst.
+- Tempatkan marker [IMAGE:X] di posisi yang TEPAT dalam analisis Anda
+- Contoh format yang BENAR:
+
+## Analisis Obat/Suplemen
+
+Dari gambar yang Anda berikan, terdapat dua jenis produk:
+
+### 1. Paracetamol 500 mg
+
+[IMAGE:0]
+
+**Analisis Gambar:** Gambar menunjukkan kotak dan strip blister obat dengan tulisan "PARACETAMOL 500 mg"...
+
+**Informasi Medis:**
+- Kategori: Analgesik dan antipiretik
+- Fungsi: Meredakan nyeri dan menurunkan demam
+...
+
+### 2. Vitamin C 1000 mg
+
+[IMAGE:1]
+
+**Analisis Gambar:** Gambar kedua menunjukkan...
+
+- Letakkan marker [IMAGE:X] SETELAH judul/subjudul produk dan SEBELUM analisis detail
+- Jika ada multiple gambar, gunakan [IMAGE:0], [IMAGE:1], [IMAGE:2], dst sesuai urutan
+- Pastikan setiap gambar dibahas dengan marker yang sesuai
 
 Berikan jawaban yang mudah dipahami, akurat, dan terstruktur dengan baik menggunakan markdown.
 Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak menggantikan konsultasi medis langsung.`
@@ -216,7 +248,8 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
 
       const aiMessage = {
         role: 'assistant',
-        content: aiResponse
+        content: aiResponse,
+        images: imageData.length > 0 ? imageData : undefined // Include user's images in AI response
       }
       const finalMessages = [...updatedMessages, aiMessage]
       updateSessionMessages(currentSessionId, finalMessages)
@@ -368,12 +401,12 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
                   }
                 }}
                 placeholder="Ketik pertanyaan atau upload gambar..."
-                className="w-full px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 pr-10 sm:pr-12 rounded-xl sm:rounded-2xl border-2 border-gray-200 focus:border-primary focus:outline-none resize-none bg-white/90 backdrop-blur-sm transition-all text-sm sm:text-base"
+                className="w-full px-3 sm:px-4 md:px-6 py-3 sm:py-3.5 md:py-4 pr-10 sm:pr-12 rounded-xl sm:rounded-2xl border-2 border-gray-200 focus:border-primary focus:outline-none resize-none bg-white/90 backdrop-blur-sm transition-all text-sm sm:text-base"
                 rows="1"
                 style={{ maxHeight: '120px' }}
               />
               <motion.div
-                className="absolute right-2 sm:right-3 md:right-4 bottom-2 sm:bottom-3 md:bottom-4 text-gray-400 text-sm sm:text-base"
+                className="absolute right-2 sm:right-3 md:right-4 bottom-3 sm:bottom-3.5 md:bottom-4 text-gray-400 text-sm sm:text-base pointer-events-none"
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
@@ -385,7 +418,7 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
               disabled={(!input.trim() && selectedImages.length === 0) || isLoading}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-r from-primary to-secondary text-white p-2.5 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+              className="bg-gradient-to-r from-primary to-secondary text-white p-3 sm:p-3.5 md:p-4 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 self-end"
             >
               <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

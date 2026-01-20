@@ -1,7 +1,28 @@
 import { motion } from 'framer-motion'
+import Lottie from 'lottie-react'
 import DoctorAnimation from './DoctorAnimation'
+import konsultasiAnimation from '../assets/card-konsultasi-24.json'
+import kesehatanAnimation from '../assets/card-kesehatan-bu-anak.json'
+import saranMedisAnimation from '../assets/card-saran-medis.json'
 
 const WelcomeScreen = ({ onStart }) => {
+  const cards = [
+    { 
+      animation: konsultasiAnimation, 
+      title: 'Konsultasi 24/7', 
+      desc: 'Layanan kapan saja' 
+    },
+    { 
+      animation: kesehatanAnimation, 
+      title: 'Kesehatan Ibu & Anak', 
+      desc: 'Spesialis posyandu' 
+    },
+    { 
+      animation: saranMedisAnimation, 
+      title: 'Saran Medis', 
+      desc: 'Informasi terpercaya' 
+    }
+  ]
   return (
     <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 md:p-6">
       <motion.div
@@ -45,17 +66,22 @@ const WelcomeScreen = ({ onStart }) => {
             transition={{ delay: 0.4 }}
             className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8"
           >
-            {[
-              { icon: '🏥', title: 'Konsultasi 24/7', desc: 'Layanan kapan saja' },
-              { icon: '👶', title: 'Kesehatan Ibu & Anak', desc: 'Spesialis posyandu' },
-              { icon: '💊', title: 'Saran Medis', desc: 'Informasi terpercaya' }
-            ].map((item, idx) => (
+            {cards.map((item, idx) => (
               <motion.div
                 key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + idx * 0.1 }}
                 whileHover={{ scale: 1.05, y: -5 }}
                 className="bg-gradient-to-br from-primary/10 to-accent/10 p-4 sm:p-6 rounded-xl sm:rounded-2xl text-center"
               >
-                <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">{item.icon}</div>
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-3">
+                  <Lottie 
+                    animationData={item.animation} 
+                    loop={true}
+                    autoplay={true}
+                  />
+                </div>
                 <h3 className="font-semibold text-sm sm:text-base text-gray-800 mb-1">{item.title}</h3>
                 <p className="text-xs sm:text-sm text-gray-600">{item.desc}</p>
               </motion.div>
