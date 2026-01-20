@@ -1,8 +1,17 @@
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import FormattedMessage from './FormattedMessage'
 
-const MessageBubble = ({ message, index }) => {
+const MessageBubble = ({ message, index, onRetry }) => {
   const isUser = message.role === 'user'
+  const [showRetry, setShowRetry] = useState(false)
+  
+  // Check if message is error or incomplete
+  const isError = message.content?.includes('Maaf, terjadi kesalahan') || 
+                  message.content?.includes('⚠️') ||
+                  message.content?.includes('error')
+  
+  const isIncomplete = !isUser && message.content && message.content.length < 50
 
   return (
     <motion.div
@@ -41,7 +50,9 @@ const MessageBubble = ({ message, index }) => {
 
       <motion.div
         whileHover={{ scale: 1.02 }}
-        className={`max-w-[85%] sm:max-w-[75%] px-3 sm:px-4 md:px-5 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg ${
+        onHoverStart={() => !isUser && setShowRetry(true)}
+        onHoverEnd={() => setShowRetry(false)}
+        className={`max-w-[85%] sm:max-w-[75%] px-3 sm:px-4 md:px-5 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg relative ${
           isUser
             ? 'bg-gradient-to-br from-primary to-secondary text-white rounded-br-sm'
             : 'bg-white text-gray-800 rounded-bl-sm'
@@ -80,7 +91,44 @@ const MessageBubble = ({ message, index }) => {
             <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base">{message.content}</p>
           </>
         ) : (
-          <FormattedMessage content={message.content} images={message.images || []} />
+          <>
+            <FormattedMessage content={message.content} images={message.images || []} />
+            
+            {/* Retry Button - Show on hover or if error/incomplete */}
+            {onRetry && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ 
+                  opacity: (showRetry || isError || isIncomplete) ? 1 : 0,
+                  y: (showRetry || isError || isIncomplete) ? 0 : 10
+                }}
+                className="mt-3 pt-3 border-t border-gray-200 flex gap-2"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onRetry(index)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Ulangi Prompt</span>
+                </motion.button>
+                
+                {(isError || isIncomplete) && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-1 text-xs text-gray-500 italic"
+                  >
+                    <span>⚠️</span>
+                    <span>{isError ? 'Error terdeteksi' : 'Response mungkin tidak lengkap'}</span>
+                  </motion.span>
+                )}
+              </motion.div>
+            )}
+          </>
         )}
         <motion.div
           initial={{ opacity: 0 }}

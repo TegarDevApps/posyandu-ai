@@ -287,6 +287,215 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
     }
   }
 
+  // Retry function - resend the previous user message
+  const handleRetry = async (messageIndex) => {
+    if (isLoading || !currentSession) return
+    
+    // Find the user message before this AI response
+    let userMessageIndex = messageIndex - 1
+    while (userMessageIndex >= 0 && messages[userMessageIndex].role !== 'user') {
+      userMessageIndex--
+    }
+    
+    if (userMessageIndex < 0) return
+    
+    const userMessage = messages[userMessageIndex]
+    
+    // Remove the failed AI response
+    const messagesBeforeRetry = messages.slice(0, messageIndex)
+    updateSessionMessages(currentSessionId, messagesBeforeRetry)
+    
+    setIsLoading(true)
+    
+    try {
+      let aiResponse = ''
+      const imageData = userMessage.images || []
+
+      // If there are images, use Google Gemini
+      if (imageData.length > 0) {
+        const { GoogleGenerativeAI } = await import('@google/generative-ai')
+        const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+
+        const systemPrompt = `Anda adalah asisten AI untuk Posyandu Menur yang ramah, profesional, dan berpengetahuan luas tentang kesehatan. Fokus utama Anda adalah:
+
+1. Kesehatan Ibu dan Anak (KIA)
+2. Imunisasi dan jadwal vaksinasi
+3. Gizi dan nutrisi balita
+4. Tumbuh kembang anak
+5. Kesehatan ibu hamil dan menyusui
+6. Keluarga berencana (KB)
+7. Pemeriksaan kesehatan rutin
+8. Pencegahan penyakit
+
+Analisis gambar dengan detail dan berikan informasi medis yang relevan.
+
+PENTING - FORMAT JAWABAN:
+- Gunakan format Markdown untuk struktur yang jelas
+- Gunakan **bold** untuk poin penting
+- Gunakan bullet points (•) atau numbering untuk list
+- Pisahkan paragraf dengan jelas
+- Gunakan heading (##) untuk topik utama
+- JANGAN sertakan link gambar eksternal atau URL gambar dalam response
+- JANGAN gunakan markdown image syntax ![](url)
+
+SANGAT PENTING - PENEMPATAN GAMBAR:
+- Untuk menampilkan gambar yang diupload user, gunakan marker: [IMAGE:0] untuk gambar pertama, [IMAGE:1] untuk gambar kedua, dst.
+- Tempatkan marker [IMAGE:X] di posisi yang TEPAT dalam analisis Anda
+- Contoh format yang BENAR:
+
+## Analisis Obat/Suplemen
+
+Dari gambar yang Anda berikan, terdapat dua jenis produk:
+
+### 1. Paracetamol 500 mg
+
+[IMAGE:0]
+
+**Analisis Gambar:** Gambar menunjukkan kotak dan strip blister obat dengan tulisan "PARACETAMOL 500 mg"...
+
+**Informasi Medis:**
+- Kategori: Analgesik dan antipiretik
+- Fungsi: Meredakan nyeri dan menurunkan demam
+...
+
+### 2. Vitamin C 1000 mg
+
+[IMAGE:1]
+
+**Analisis Gambar:** Gambar kedua menunjukkan...
+
+- Letakkan marker [IMAGE:X] SETELAH judul/subjudul produk dan SEBELUM analisis detail
+- Jika ada multiple gambar, gunakan [IMAGE:0], [IMAGE:1], [IMAGE:2], dst sesuai urutan
+- Pastikan setiap gambar dibahas dengan marker yang sesuai
+
+Berikan jawaban yang mudah dipahami, akurat, dan terstruktur dengan baik menggunakan markdown.
+Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak menggantikan konsultasi medis langsung.`
+
+        // Convert base64 images to Gemini format
+        const imageParts = imageData.map(img => {
+          const base64Data = img.preview.split(',')[1]
+          const mimeType = img.preview.split(',')[0].split(':')[1].split(';')[0]
+          return {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType || 'image/jpeg'
+            }
+          }
+        })
+
+        const prompt = `${systemPrompt}\n\nPertanyaan user: ${userMessage.content || 'Tolong analisis gambar ini'}`
+        
+        try {
+          const result = await model.generateContent([prompt, ...imageParts])
+          const response = await result.response
+          aiResponse = response.text()
+        } catch (geminiError) {
+          console.error('Gemini error:', geminiError)
+          throw new Error(`Gemini API error: ${geminiError.message}`)
+        }
+      } else {
+        // Text-only: use Groq
+        const apiMessages = []
+        
+        // Add system message
+        apiMessages.push({
+          role: 'system',
+          content: `Anda adalah asisten AI untuk Posyandu Menur yang ramah, profesional, dan berpengetahuan luas tentang kesehatan. Fokus utama Anda adalah:
+
+1. Kesehatan Ibu dan Anak (KIA)
+2. Imunisasi dan jadwal vaksinasi
+3. Gizi dan nutrisi balita
+4. Tumbuh kembang anak
+5. Kesehatan ibu hamil dan menyusui
+6. Keluarga berencana (KB)
+7. Pemeriksaan kesehatan rutin
+8. Pencegahan penyakit
+
+PENTING - FORMAT JAWABAN:
+- Gunakan format Markdown untuk struktur yang jelas
+- Gunakan **bold** untuk poin penting
+- Gunakan bullet points (•) atau numbering untuk list
+- Pisahkan paragraf dengan jelas
+- Gunakan heading (##) untuk topik utama
+- Buat jawaban yang mudah di-scan dan dibaca
+- Hindari paragraf panjang, pecah menjadi poin-poin
+
+Berikan jawaban yang:
+- Mudah dipahami dan ramah
+- Berbasis informasi medis yang akurat
+- Empati dan mendukung
+- Terstruktur dengan baik menggunakan markdown
+- Menyarankan konsultasi langsung dengan tenaga medis untuk kasus serius
+- Menggunakan bahasa Indonesia yang baik
+
+Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak menggantikan konsultasi medis langsung.`
+        })
+
+        // Add conversation history up to retry point
+        for (const msg of messagesBeforeRetry) {
+          if (msg.role === 'assistant' || msg.role === 'user') {
+            if (!msg.images) {
+              apiMessages.push({
+                role: msg.role,
+                content: typeof msg.content === 'string' ? msg.content : String(msg.content || '')
+              })
+            }
+          }
+        }
+
+        const response = await axios.post(
+          import.meta.env.VITE_OPENAI_API_URL,
+          {
+            model: import.meta.env.VITE_OPENAI_MODEL,
+            messages: apiMessages
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': window.location.origin,
+              'X-Title': 'Posyandu AI Chat'
+            }
+          }
+        )
+
+        aiResponse = response.data.choices[0].message.content
+      }
+
+      const aiMessage = {
+        role: 'assistant',
+        content: aiResponse,
+        images: imageData.length > 0 ? imageData : undefined
+      }
+      const finalMessages = [...messagesBeforeRetry, aiMessage]
+      updateSessionMessages(currentSessionId, finalMessages)
+    } catch (error) {
+      console.error('Retry error:', error)
+      
+      let errorMessage = 'Maaf, terjadi kesalahan saat mencoba ulang. Silakan coba lagi. 🙏'
+      
+      if (error.message?.includes('API key')) {
+        errorMessage = '⚠️ Gemini API key tidak valid atau belum diset.'
+      } else if (error.message?.includes('quota')) {
+        errorMessage = '⚠️ Quota API habis. Silakan tunggu beberapa saat.'
+      } else if (error.response?.status === 402) {
+        errorMessage = '⚠️ API key kehabisan kredit.'
+      } else if (error.response?.status === 401) {
+        errorMessage = '⚠️ API key tidak valid.'
+      }
+      
+      const errorMsg = {
+        role: 'assistant',
+        content: errorMessage
+      }
+      const finalMessages = [...messagesBeforeRetry, errorMsg]
+      updateSessionMessages(currentSessionId, finalMessages)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const quickQuestions = [
     '📅 Jadwal imunisasi bayi',
     '🍼 Tips ASI eksklusif',
@@ -325,7 +534,12 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
           <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4 pb-4">
             <AnimatePresence>
               {messages.map((message, index) => (
-                <MessageBubble key={index} message={message} index={index} />
+                <MessageBubble 
+                  key={index} 
+                  message={message} 
+                  index={index}
+                  onRetry={handleRetry}
+                />
               ))}
             </AnimatePresence>
             
