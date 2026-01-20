@@ -49,7 +49,7 @@ const Sidebar = ({ sessions, currentSessionId, onNewChat, onSelectSession, onDel
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Overlay for mobile only */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -62,14 +62,14 @@ const Sidebar = ({ sessions, currentSessionId, onNewChat, onSelectSession, onDel
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
+      {/* Sidebar - Fixed on mobile, relative on desktop */}
       <motion.div
         initial={false}
         animate={{ 
-          x: isOpen ? 0 : -320
+          width: isOpen ? 320 : 0
         }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed left-0 top-0 h-screen w-80 bg-white shadow-2xl flex flex-col overflow-hidden z-50 lg:relative lg:w-auto lg:translate-x-0"
+        className="fixed lg:relative left-0 top-0 h-screen bg-white shadow-2xl flex flex-col overflow-hidden z-50 lg:z-auto flex-shrink-0"
       >
         {/* Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary to-secondary flex-shrink-0">
