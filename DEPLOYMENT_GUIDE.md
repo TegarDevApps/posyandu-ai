@@ -106,6 +106,30 @@ Setelah deploy selesai:
 
 ## Troubleshooting
 
+### Markdown Formatting Tidak Muncul di Production
+
+**Gejala:** Response AI di local terlihat terstruktur (heading, bold, list), tapi di production jadi plain text.
+
+**Penyebab:** Plugin `@tailwindcss/typography` belum terinstall.
+
+**Solusi:**
+
+```bash
+# Install typography plugin
+npm install @tailwindcss/typography
+
+# Update tailwind.config.js
+# Tambahkan di plugins array:
+plugins: [
+  require('@tailwindcss/typography'),
+],
+
+# Commit dan push
+git add .
+git commit -m "Fix: Add Tailwind Typography plugin"
+git push origin main
+```
+
 ### Build Failed
 
 ```bash
