@@ -8,7 +8,7 @@ import Sidebar from './Sidebar'
 import ImageUpload from './ImageUpload'
 import { useChatHistory } from '../hooks/useChatHistory'
 
-const ChatInterface = ({ initialCategory = null, onBackToWelcome }) => {
+const ChatInterface = ({ initialCategory = null }) => {
   const {
     sessions,
     currentSession,
@@ -92,49 +92,30 @@ const ChatInterface = ({ initialCategory = null, onBackToWelcome }) => {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Initialize with category greeting - CREATE NEW CHAT
+  // Initialize with category greeting
   useEffect(() => {
-    if (initialCategory && !categoryInitialized) {
-      setCategoryInitialized(true)
-      
-      // Create new session (will have default greeting)
-      const newSession = createNewSession()
-      
-      // Wait a bit for session to be created, then replace default greeting with category greeting
-      setTimeout(() => {
-        const categoryPrompt = getCategoryPrompt(initialCategory)
-        if (categoryPrompt) {
-          // Replace default greeting with category greeting
-          const greetingMessage = {
-            role: 'assistant',
-            content: categoryPrompt.greeting,
-            categoryQuestions: categoryPrompt.questions
-          }
-          
-          // Replace the default message with category greeting
-          updateSessionMessages(newSession.id, [greetingMessage])
+    if (initialCategory && !categoryInitialized && currentSession && messages.length === 1) {
+      const categoryPrompt = getCategoryPrompt(initialCategory)
+      if (categoryPrompt) {
+        const greetingMessage = {
+          role: 'assistant',
+          content: categoryPrompt.greeting,
+          categoryQuestions: categoryPrompt.questions
         }
-      }, 50)
+        const updatedMessages = [...messages, greetingMessage]
+        updateSessionMessages(currentSessionId, updatedMessages)
+        setCategoryInitialized(true)
+      }
     }
-  }, [initialCategory, categoryInitialized])
+  }, [initialCategory, categoryInitialized, currentSession, messages, currentSessionId])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  // Disable auto scroll - let user scroll manually
-  // useEffect(() => {
-  //   if (!isTyping) {
-  //     scrollToBottom()
-  //   }
-  // }, [messages, isTyping])
-
-  // Smooth scroll during typing
-  // useEffect(() => {
-  //   if (isTyping) {
-  //     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  //   }
-  // }, [typingText, isTyping])
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   // Detect scroll position
   useEffect(() => {
@@ -275,7 +256,60 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
         const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-        const systemPrompt = getSystemPrompt(true)
+        const systemPrompt = `Anda adalah asisten AI untuk Posyandu Menur yang ramah, profesional, dan berpengetahuan luas tentang kesehatan. Fokus utama Anda adalah:
+
+1. Kesehatan Ibu dan Anak (KIA)
+2. Imunisasi dan jadwal vaksinasi
+3. Gizi dan nutrisi balita
+4. Tumbuh kembang anak
+5. Kesehatan ibu hamil dan menyusui
+6. Keluarga berencana (KB)
+7. Pemeriksaan kesehatan rutin
+8. Pencegahan penyakit
+
+Analisis gambar dengan detail dan berikan informasi medis yang relevan.
+
+PENTING - FORMAT JAWABAN:
+- Gunakan format Markdown untuk struktur yang jelas
+- Gunakan **bold** untuk poin penting
+- Gunakan bullet points (•) atau numbering untuk list
+- Pisahkan paragraf dengan jelas
+- Gunakan heading (##) untuk topik utama
+- JANGAN sertakan link gambar eksternal atau URL gambar dalam response
+- JANGAN gunakan markdown image syntax ![](url)
+
+SANGAT PENTING - PENEMPATAN GAMBAR:
+- Untuk menampilkan gambar yang diupload user, gunakan marker: [IMAGE:0] untuk gambar pertama, [IMAGE:1] untuk gambar kedua, dst.
+- Tempatkan marker [IMAGE:X] di posisi yang TEPAT dalam analisis Anda
+- Contoh format yang BENAR:
+
+## Analisis Obat/Suplemen
+
+Dari gambar yang Anda berikan, terdapat dua jenis produk:
+
+### 1. Paracetamol 500 mg
+
+[IMAGE:0]
+
+**Analisis Gambar:** Gambar menunjukkan kotak dan strip blister obat dengan tulisan "PARACETAMOL 500 mg"...
+
+**Informasi Medis:**
+- Kategori: Analgesik dan antipiretik
+- Fungsi: Meredakan nyeri dan menurunkan demam
+...
+
+### 2. Vitamin C 1000 mg
+
+[IMAGE:1]
+
+**Analisis Gambar:** Gambar kedua menunjukkan...
+
+- Letakkan marker [IMAGE:X] SETELAH judul/subjudul produk dan SEBELUM analisis detail
+- Jika ada multiple gambar, gunakan [IMAGE:0], [IMAGE:1], [IMAGE:2], dst sesuai urutan
+- Pastikan setiap gambar dibahas dengan marker yang sesuai
+
+Berikan jawaban yang mudah dipahami, akurat, dan terstruktur dengan baik menggunakan markdown.
+Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak menggantikan konsultasi medis langsung.`
 
         // Convert base64 images to Gemini format
         const imageParts = imageData.map(img => {
@@ -306,7 +340,35 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
         // Add system message
         apiMessages.push({
           role: 'system',
-          content: getSystemPrompt(false)
+          content: `Anda adalah asisten AI untuk Posyandu Menur yang ramah, profesional, dan berpengetahuan luas tentang kesehatan. Fokus utama Anda adalah:
+
+1. Kesehatan Ibu dan Anak (KIA)
+2. Imunisasi dan jadwal vaksinasi
+3. Gizi dan nutrisi balita
+4. Tumbuh kembang anak
+5. Kesehatan ibu hamil dan menyusui
+6. Keluarga berencana (KB)
+7. Pemeriksaan kesehatan rutin
+8. Pencegahan penyakit
+
+PENTING - FORMAT JAWABAN:
+- Gunakan format Markdown untuk struktur yang jelas
+- Gunakan **bold** untuk poin penting
+- Gunakan bullet points (•) atau numbering untuk list
+- Pisahkan paragraf dengan jelas
+- Gunakan heading (##) untuk topik utama
+- Buat jawaban yang mudah di-scan dan dibaca
+- Hindari paragraf panjang, pecah menjadi poin-poin
+
+Berikan jawaban yang:
+- Mudah dipahami dan ramah
+- Berbasis informasi medis yang akurat
+- Empati dan mendukung
+- Terstruktur dengan baik menggunakan markdown
+- Menyarankan konsultasi langsung dengan tenaga medis untuk kasus serius
+- Menggunakan bahasa Indonesia yang baik
+
+Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak menggantikan konsultasi medis langsung.`
         })
 
         // Add conversation history
@@ -340,17 +402,13 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
         aiResponse = response.data.choices[0].message.content
       }
 
-      // Directly show result without typing animation
-      setIsLoading(false)
-      
       const aiMessage = {
         role: 'assistant',
         content: aiResponse,
-        images: imageData.length > 0 ? imageData : undefined
+        images: imageData.length > 0 ? imageData : undefined // Include user's images in AI response
       }
       const finalMessages = [...updatedMessages, aiMessage]
       updateSessionMessages(currentSessionId, finalMessages)
-      
     } catch (error) {
       console.error('Error details:', error)
       console.error('Error response:', error.response?.data)
@@ -379,8 +437,8 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
       }
       const finalMessages = [...updatedMessages, errorMsg]
       updateSessionMessages(currentSessionId, finalMessages)
-      setIsLoading(false)
     } finally {
+      setIsLoading(false)
       inputRef.current?.focus()
     }
   }
@@ -415,7 +473,60 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
         const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-        const systemPrompt = getSystemPrompt(true)
+        const systemPrompt = `Anda adalah asisten AI untuk Posyandu Menur yang ramah, profesional, dan berpengetahuan luas tentang kesehatan. Fokus utama Anda adalah:
+
+1. Kesehatan Ibu dan Anak (KIA)
+2. Imunisasi dan jadwal vaksinasi
+3. Gizi dan nutrisi balita
+4. Tumbuh kembang anak
+5. Kesehatan ibu hamil dan menyusui
+6. Keluarga berencana (KB)
+7. Pemeriksaan kesehatan rutin
+8. Pencegahan penyakit
+
+Analisis gambar dengan detail dan berikan informasi medis yang relevan.
+
+PENTING - FORMAT JAWABAN:
+- Gunakan format Markdown untuk struktur yang jelas
+- Gunakan **bold** untuk poin penting
+- Gunakan bullet points (•) atau numbering untuk list
+- Pisahkan paragraf dengan jelas
+- Gunakan heading (##) untuk topik utama
+- JANGAN sertakan link gambar eksternal atau URL gambar dalam response
+- JANGAN gunakan markdown image syntax ![](url)
+
+SANGAT PENTING - PENEMPATAN GAMBAR:
+- Untuk menampilkan gambar yang diupload user, gunakan marker: [IMAGE:0] untuk gambar pertama, [IMAGE:1] untuk gambar kedua, dst.
+- Tempatkan marker [IMAGE:X] di posisi yang TEPAT dalam analisis Anda
+- Contoh format yang BENAR:
+
+## Analisis Obat/Suplemen
+
+Dari gambar yang Anda berikan, terdapat dua jenis produk:
+
+### 1. Paracetamol 500 mg
+
+[IMAGE:0]
+
+**Analisis Gambar:** Gambar menunjukkan kotak dan strip blister obat dengan tulisan "PARACETAMOL 500 mg"...
+
+**Informasi Medis:**
+- Kategori: Analgesik dan antipiretik
+- Fungsi: Meredakan nyeri dan menurunkan demam
+...
+
+### 2. Vitamin C 1000 mg
+
+[IMAGE:1]
+
+**Analisis Gambar:** Gambar kedua menunjukkan...
+
+- Letakkan marker [IMAGE:X] SETELAH judul/subjudul produk dan SEBELUM analisis detail
+- Jika ada multiple gambar, gunakan [IMAGE:0], [IMAGE:1], [IMAGE:2], dst sesuai urutan
+- Pastikan setiap gambar dibahas dengan marker yang sesuai
+
+Berikan jawaban yang mudah dipahami, akurat, dan terstruktur dengan baik menggunakan markdown.
+Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak menggantikan konsultasi medis langsung.`
 
         // Convert base64 images to Gemini format
         const imageParts = imageData.map(img => {
@@ -446,7 +557,35 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
         // Add system message
         apiMessages.push({
           role: 'system',
-          content: getSystemPrompt(false)
+          content: `Anda adalah asisten AI untuk Posyandu Menur yang ramah, profesional, dan berpengetahuan luas tentang kesehatan. Fokus utama Anda adalah:
+
+1. Kesehatan Ibu dan Anak (KIA)
+2. Imunisasi dan jadwal vaksinasi
+3. Gizi dan nutrisi balita
+4. Tumbuh kembang anak
+5. Kesehatan ibu hamil dan menyusui
+6. Keluarga berencana (KB)
+7. Pemeriksaan kesehatan rutin
+8. Pencegahan penyakit
+
+PENTING - FORMAT JAWABAN:
+- Gunakan format Markdown untuk struktur yang jelas
+- Gunakan **bold** untuk poin penting
+- Gunakan bullet points (•) atau numbering untuk list
+- Pisahkan paragraf dengan jelas
+- Gunakan heading (##) untuk topik utama
+- Buat jawaban yang mudah di-scan dan dibaca
+- Hindari paragraf panjang, pecah menjadi poin-poin
+
+Berikan jawaban yang:
+- Mudah dipahami dan ramah
+- Berbasis informasi medis yang akurat
+- Empati dan mendukung
+- Terstruktur dengan baik menggunakan markdown
+- Menyarankan konsultasi langsung dengan tenaga medis untuk kasus serius
+- Menggunakan bahasa Indonesia yang baik
+
+Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak menggantikan konsultasi medis langsung.`
         })
 
         // Add conversation history up to retry point
@@ -546,7 +685,6 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
         <ChatHeader 
           onMenuClick={() => setSidebarOpen(!sidebarOpen)} 
           sidebarOpen={sidebarOpen}
-          onBackToWelcome={onBackToWelcome}
         />
 
         {/* Messages Area */}

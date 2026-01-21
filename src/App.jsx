@@ -4,13 +4,27 @@ import WelcomeScreen from './components/WelcomeScreen'
 
 function App() {
   const [started, setStarted] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState(null)
+
+  const handleStart = (category = null) => {
+    setSelectedCategory(category)
+    setStarted(true)
+  }
+
+  const handleBackToWelcome = () => {
+    setStarted(false)
+    setSelectedCategory(null)
+  }
 
   return (
     <div className="min-h-screen w-full">
       {!started ? (
-        <WelcomeScreen onStart={() => setStarted(true)} />
+        <WelcomeScreen onStart={handleStart} />
       ) : (
-        <ChatInterface />
+        <ChatInterface 
+          initialCategory={selectedCategory} 
+          onBackToWelcome={handleBackToWelcome}
+        />
       )}
     </div>
   )

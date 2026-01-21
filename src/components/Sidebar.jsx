@@ -74,7 +74,7 @@ const Sidebar = ({ sessions, currentSessionId, onNewChat, onSelectSession, onDel
         {/* Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary to-secondary flex-shrink-0">
           <div className="flex items-center gap-2">
-            <img src="/icon-posyandu.jpeg" alt="Logo" className="w-8 h-8 rounded-full" />
+            <img src="/new-icon-posyandu.png" alt="Logo" className="w-8 h-8 rounded-full object-cover" />
             <h2 className="font-bold text-white text-lg">Riwayat Chat</h2>
           </div>
           <button
