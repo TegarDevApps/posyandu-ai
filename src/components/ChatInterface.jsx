@@ -522,9 +522,96 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
     '💊 Vitamin untuk balita'
   ]
 
-  const handleQuestionClick = (question) => {
-    setInput(question)
-    inputRef.current?.focus()
+  const handleQuestionClick = async (question) => {
+    if (isLoading || !currentSession) return
+    
+    // Build user message
+    const userMessage = { 
+      role: 'user', 
+      content: question,
+    }
+    
+    const updatedMessages = [...messages, userMessage]
+    updateSessionMessages(currentSessionId, updatedMessages)
+    setIsLoading(true)
+
+    try {
+      let aiResponse = ''
+
+      // Text-only: use Groq
+      const apiMessages = []
+      
+      // Add system message
+      apiMessages.push({
+        role: 'system',
+        content: getSystemPrompt(false)
+      })
+
+      // Add conversation history
+      for (const msg of updatedMessages) {
+        if (msg.role === 'assistant' || msg.role === 'user') {
+          if (!msg.images) {
+            apiMessages.push({
+              role: msg.role,
+              content: typeof msg.content === 'string' ? msg.content : String(msg.content || '')
+            })
+          }
+        }
+      }
+
+      const response = await axios.post(
+        import.meta.env.VITE_OPENAI_API_URL,
+        {
+          model: import.meta.env.VITE_OPENAI_MODEL,
+          messages: apiMessages
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'Posyandu AI Chat'
+          }
+        }
+      )
+
+      aiResponse = response.data.choices[0].message.content
+
+      // Directly show result without typing animation
+      setIsLoading(false)
+      
+      const aiMessage = {
+        role: 'assistant',
+        content: aiResponse,
+      }
+      const finalMessages = [...updatedMessages, aiMessage]
+      updateSessionMessages(currentSessionId, finalMessages)
+      
+    } catch (error) {
+      console.error('Error details:', error)
+      
+      let errorMessage = 'Maaf, terjadi kesalahan. Silakan coba lagi dalam beberapa saat. 🙏'
+      
+      if (error.response?.status === 402) {
+        errorMessage = '⚠️ API key kehabisan kredit. Silakan top up saldo atau gunakan API key yang berbeda.'
+      } else if (error.response?.status === 401) {
+        errorMessage = '⚠️ API key tidak valid. Silakan periksa kembali API key Anda di file .env'
+      } else if (error.response?.data?.error?.message) {
+        errorMessage = `Maaf, terjadi kesalahan: ${error.response.data.error.message}`
+      } else if (error.message) {
+        errorMessage = `Maaf, terjadi kesalahan: ${error.message}`
+      }
+      
+      const errorMsg = {
+        role: 'assistant',
+        content: errorMessage
+      }
+      const finalMessages = [...updatedMessages, errorMsg]
+      updateSessionMessages(currentSessionId, finalMessages)
+      setIsLoading(false)
+    } finally {
+      inputRef.current?.focus()
+    }
   }
 
   return (
