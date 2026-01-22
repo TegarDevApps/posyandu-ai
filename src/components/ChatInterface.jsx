@@ -225,7 +225,39 @@ INFORMASI PENTING POSYANDU MENUR 027:
 - Persit: 081244148988
 - Puskesmas Juwata Kerikil: +62 811-5926-888
 
-Gunakan informasi ini ketika user menanyakan tentang jadwal kegiatan atau kontak.`
+SANGAT PENTING - FORMAT INFORMASI:
+Ketika memberikan informasi jadwal atau kontak, WAJIB gunakan format seperti contoh di atas:
+- Setiap item list HARUS di baris terpisah
+- Gunakan heading (##) untuk setiap kategori
+- Gunakan bullet point (-) untuk setiap item
+- JANGAN PERNAH gabungkan multiple items dalam satu baris
+- JANGAN gunakan bullet point horizontal (• item1 • item2)
+
+Contoh FORMAT YANG BENAR untuk jadwal:
+
+## Jadwal Kegiatan Posyandu Menur 027
+
+**Jadwal Kegiatan Posyandu:**
+- Setiap bulan pada minggu pertama
+- Jam: 08.30 - 10.00 WITA
+
+**Jadwal Kegiatan Kartika School:**
+- Hari Senin
+- Jam: 08.30 - 10.00 WITA
+
+**Jadwal Kunjungan Rumah:**
+- Setiap bulan pada minggu ketiga
+- Jam: 16.00 - 17.00 WITA
+
+Contoh FORMAT YANG BENAR untuk kontak:
+
+## Kontak Penting
+
+- **KSA (Faskes Pertama):** 0855102157033
+- **Persit:** 081244148988
+- **Puskesmas Juwata Kerikil:** +62 811-5926-888
+
+SELALU ikuti format di atas!`
 
     if (hasImages) {
       basePrompt += `\n\nAnalisis gambar dengan detail dan berikan informasi medis yang relevan.
@@ -249,11 +281,12 @@ SANGAT PENTING - PENEMPATAN GAMBAR:
       basePrompt += `\n\nPENTING - FORMAT JAWABAN:
 - Gunakan format Markdown untuk struktur yang jelas
 - Gunakan **bold** untuk poin penting
-- Gunakan bullet points (•) atau numbering untuk list
+- Gunakan bullet points (•) atau numbering untuk list - SETIAP ITEM HARUS DI BARIS BARU
 - Pisahkan paragraf dengan jelas
 - Gunakan heading (##) untuk topik utama
 - Buat jawaban yang mudah di-scan dan dibaca
-- Hindari paragraf panjang, pecah menjadi poin-poin`
+- Hindari paragraf panjang, pecah menjadi poin-poin
+- JANGAN gabungkan list items dalam satu baris`
     }
 
     basePrompt += `\n\nBerikan jawaban yang:
