@@ -42,7 +42,9 @@ const ChatInterface = ({ initialCategory = null, onBackToWelcome }) => {
           '🤰 Jadwal pemeriksaan ibu hamil',
           '👶 Imunisasi bayi lengkap',
           '📊 Pemantauan tumbuh kembang',
-          '🍎 Nutrisi ibu hamil'
+          '🍎 Nutrisi ibu hamil',
+          '🥗 Gizi seimbang pada balita',
+          '🤱 Postnatal care'
         ]
       },
       posbindu: {
@@ -51,13 +53,16 @@ const ChatInterface = ({ initialCategory = null, onBackToWelcome }) => {
           '📏 Cara hitung IMT',
           '💉 Cek gula darah rutin',
           '❤️ Pencegahan hipertensi',
-          '🥗 Menu diet sehat'
+          '🥗 Menu diet sehat',
+          '🩸 Pencegahan anemia',
+          '🚭 Bahaya asap rokok',
+          '🧈 Pencegahan kolesterol'
         ]
       },
       bkb: {
         greeting: `Selamat datang di layanan **BKB (Bina Keluarga Balita)**! 👶\n\nSaya siap membantu Anda dengan:\n\n• **Kelas BKB** - Program pembelajaran untuk orang tua balita\n• **Kartika School** - Pendidikan anak usia dini\n• **Stimulasi Tumbuh Kembang** - Aktivitas untuk mengoptimalkan perkembangan anak\n\nAda yang ingin Anda tanyakan tentang tumbuh kembang dan pendidikan anak? 🌟`,
         questions: [
-          '🎨 Stimulasi anak 1-2 tahun',
+          '🎨 Stimulasi anak 0-5 tahun',
           '📚 Program Kartika School',
           '🧩 Mainan edukatif',
           '👨‍👩‍👧 Tips parenting'
@@ -69,7 +74,7 @@ const ChatInterface = ({ initialCategory = null, onBackToWelcome }) => {
           '💊 Informasi obat',
           '🏥 Layanan Posyandu',
           '📅 Jadwal kegiatan',
-          '📞 Kontak darurat'
+          '📞 Kontak'
         ]
       }
     }
@@ -199,7 +204,27 @@ Berikan informasi yang komprehensif dan mudah dipahami.`
 5. Kesehatan ibu hamil dan menyusui
 6. Keluarga berencana (KB)
 7. Pemeriksaan kesehatan rutin
-8. Pencegahan penyakit`
+8. Pencegahan penyakit
+
+INFORMASI PENTING POSYANDU MENUR 027:
+
+**Jadwal Kegiatan Posyandu:**
+- Setiap bulan pada minggu pertama
+- Jam: 08.00 - 10.00 WITA
+
+**Jadwal Kegiatan Kartika School:**
+- Hari Senin
+- Jam: 08.00 - 10.00 WITA
+
+**Jadwal Kunjungan Rumah:**
+- Setiap bulan pada minggu ketiga
+- Jam: 16.00 - 17.00 WITA
+
+**Kontak Penting:**
+- KSA (Faskes Pertama): 0855102157033
+- Persit: 081244148988
+
+Gunakan informasi ini ketika user menanyakan tentang jadwal kegiatan atau kontak.`
 
     if (hasImages) {
       basePrompt += `\n\nAnalisis gambar dengan detail dan berikan informasi medis yang relevan.
@@ -343,10 +368,14 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
       // Directly show result without typing animation
       setIsLoading(false)
       
+      // Add category questions if this is a category chat
+      const categoryPrompt = initialCategory ? getCategoryPrompt(initialCategory) : null
+      
       const aiMessage = {
         role: 'assistant',
         content: aiResponse,
-        images: imageData.length > 0 ? imageData : undefined
+        images: imageData.length > 0 ? imageData : undefined,
+        categoryQuestions: categoryPrompt ? categoryPrompt.questions : undefined
       }
       const finalMessages = [...updatedMessages, aiMessage]
       updateSessionMessages(currentSessionId, finalMessages)
@@ -480,10 +509,14 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
         aiResponse = response.data.choices[0].message.content
       }
 
+      // Add category questions if this is a category chat
+      const categoryPrompt = initialCategory ? getCategoryPrompt(initialCategory) : null
+
       const aiMessage = {
         role: 'assistant',
         content: aiResponse,
-        images: imageData.length > 0 ? imageData : undefined
+        images: imageData.length > 0 ? imageData : undefined,
+        categoryQuestions: categoryPrompt ? categoryPrompt.questions : undefined
       }
       const finalMessages = [...messagesBeforeRetry, aiMessage]
       updateSessionMessages(currentSessionId, finalMessages)
@@ -580,9 +613,13 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
       // Directly show result without typing animation
       setIsLoading(false)
       
+      // Add category questions if this is a category chat
+      const categoryPrompt = initialCategory ? getCategoryPrompt(initialCategory) : null
+      
       const aiMessage = {
         role: 'assistant',
         content: aiResponse,
+        categoryQuestions: categoryPrompt ? categoryPrompt.questions : undefined
       }
       const finalMessages = [...updatedMessages, aiMessage]
       updateSessionMessages(currentSessionId, finalMessages)
