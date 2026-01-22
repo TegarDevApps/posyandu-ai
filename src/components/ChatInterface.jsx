@@ -210,11 +210,11 @@ INFORMASI PENTING POSYANDU MENUR 027:
 
 **Jadwal Kegiatan Posyandu:**
 - Setiap bulan pada minggu pertama
-- Jam: 08.00 - 10.00 WITA
+- Jam: 08.30 - 10.00 WITA
 
 **Jadwal Kegiatan Kartika School:**
 - Hari Senin
-- Jam: 08.00 - 10.00 WITA
+- Jam: 08.30 - 10.00 WITA
 
 **Jadwal Kunjungan Rumah:**
 - Setiap bulan pada minggu ketiga
@@ -223,6 +223,7 @@ INFORMASI PENTING POSYANDU MENUR 027:
 **Kontak Penting:**
 - KSA (Faskes Pertama): 0855102157033
 - Persit: 081244148988
+- Puskesmas Juwata Kerikil: +62 811-5926-888
 
 Gunakan informasi ini ketika user menanyakan tentang jadwal kegiatan atau kontak.`
 

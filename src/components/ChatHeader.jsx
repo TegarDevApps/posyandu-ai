@@ -41,7 +41,7 @@ const ChatHeader = ({ onMenuClick, sidebarOpen, onBackToWelcome }) => {
         </button>
 
         <motion.img
-          src="/new-icon-posyandu.png"
+          src="/posyandu-icon-fix.jpeg"
           alt="Posyandu"
           className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full border-2 border-white shadow-lg flex-shrink-0 object-cover"
         />
