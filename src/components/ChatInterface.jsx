@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import axios from 'axios'
 import MessageBubble from './MessageBubble'
 import TypingIndicator from './TypingIndicator'
 import ChatHeader from './ChatHeader'
@@ -359,44 +358,31 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
           throw new Error(`Gemini API error: ${geminiError.message}`)
         }
       } else {
-        // Text-only: use Groq
-        const apiMessages = []
-        
-        // Add system message
-        apiMessages.push({
-          role: 'system',
-          content: getSystemPrompt(false)
-        })
+        // Text-only: use Gemini
+        const { GoogleGenerativeAI } = await import('@google/generative-ai')
+        const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-        // Add conversation history
+        const systemPrompt = getSystemPrompt(false)
+
+        // Build conversation history for Gemini
+        let conversationHistory = systemPrompt + '\n\n'
         for (const msg of updatedMessages) {
-          if (msg.role === 'assistant' || msg.role === 'user') {
-            if (!msg.images) {
-              apiMessages.push({
-                role: msg.role,
-                content: typeof msg.content === 'string' ? msg.content : String(msg.content || '')
-              })
-            }
+          if (msg.role === 'user') {
+            conversationHistory += `User: ${msg.content}\n\n`
+          } else if (msg.role === 'assistant') {
+            conversationHistory += `Assistant: ${msg.content}\n\n`
           }
         }
 
-        const response = await axios.post(
-          import.meta.env.VITE_OPENAI_API_URL,
-          {
-            model: import.meta.env.VITE_OPENAI_MODEL,
-            messages: apiMessages
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': window.location.origin,
-              'X-Title': 'Posyandu AI Chat'
-            }
-          }
-        )
-
-        aiResponse = response.data.choices[0].message.content
+        try {
+          const result = await model.generateContent(conversationHistory)
+          const response = await result.response
+          aiResponse = response.text()
+        } catch (geminiError) {
+          console.error('Gemini error:', geminiError)
+          throw new Error(`Gemini API error: ${geminiError.message}`)
+        }
       }
 
       // Directly show result without typing animation
@@ -503,44 +489,31 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
           throw new Error(`Gemini API error: ${geminiError.message}`)
         }
       } else {
-        // Text-only: use Groq
-        const apiMessages = []
-        
-        // Add system message
-        apiMessages.push({
-          role: 'system',
-          content: getSystemPrompt(false)
-        })
+        // Text-only: use Gemini
+        const { GoogleGenerativeAI } = await import('@google/generative-ai')
+        const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-        // Add conversation history up to retry point
+        const systemPrompt = getSystemPrompt(false)
+
+        // Build conversation history for Gemini
+        let conversationHistory = systemPrompt + '\n\n'
         for (const msg of messagesBeforeRetry) {
-          if (msg.role === 'assistant' || msg.role === 'user') {
-            if (!msg.images) {
-              apiMessages.push({
-                role: msg.role,
-                content: typeof msg.content === 'string' ? msg.content : String(msg.content || '')
-              })
-            }
+          if (msg.role === 'user') {
+            conversationHistory += `User: ${msg.content}\n\n`
+          } else if (msg.role === 'assistant') {
+            conversationHistory += `Assistant: ${msg.content}\n\n`
           }
         }
 
-        const response = await axios.post(
-          import.meta.env.VITE_OPENAI_API_URL,
-          {
-            model: import.meta.env.VITE_OPENAI_MODEL,
-            messages: apiMessages
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': window.location.origin,
-              'X-Title': 'Posyandu AI Chat'
-            }
-          }
-        )
-
-        aiResponse = response.data.choices[0].message.content
+        try {
+          const result = await model.generateContent(conversationHistory)
+          const response = await result.response
+          aiResponse = response.text()
+        } catch (geminiError) {
+          console.error('Gemini error:', geminiError)
+          throw new Error(`Gemini API error: ${geminiError.message}`)
+        }
       }
 
       // Add category questions if this is a category chat
@@ -605,44 +578,31 @@ Selalu ingatkan bahwa informasi yang diberikan bersifat edukatif dan tidak mengg
     try {
       let aiResponse = ''
 
-      // Text-only: use Groq
-      const apiMessages = []
-      
-      // Add system message
-      apiMessages.push({
-        role: 'system',
-        content: getSystemPrompt(false)
-      })
+      // Text-only: use Gemini
+      const { GoogleGenerativeAI } = await import('@google/generative-ai')
+      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY)
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
-      // Add conversation history
+      const systemPrompt = getSystemPrompt(false)
+
+      // Build conversation history for Gemini
+      let conversationHistory = systemPrompt + '\n\n'
       for (const msg of updatedMessages) {
-        if (msg.role === 'assistant' || msg.role === 'user') {
-          if (!msg.images) {
-            apiMessages.push({
-              role: msg.role,
-              content: typeof msg.content === 'string' ? msg.content : String(msg.content || '')
-            })
-          }
+        if (msg.role === 'user') {
+          conversationHistory += `User: ${msg.content}\n\n`
+        } else if (msg.role === 'assistant') {
+          conversationHistory += `Assistant: ${msg.content}\n\n`
         }
       }
 
-      const response = await axios.post(
-        import.meta.env.VITE_OPENAI_API_URL,
-        {
-          model: import.meta.env.VITE_OPENAI_MODEL,
-          messages: apiMessages
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.origin,
-            'X-Title': 'Posyandu AI Chat'
-          }
-        }
-      )
-
-      aiResponse = response.data.choices[0].message.content
+      try {
+        const result = await model.generateContent(conversationHistory)
+        const response = await result.response
+        aiResponse = response.text()
+      } catch (geminiError) {
+        console.error('Gemini error:', geminiError)
+        throw new Error(`Gemini API error: ${geminiError.message}`)
+      }
 
       // Directly show result without typing animation
       setIsLoading(false)
